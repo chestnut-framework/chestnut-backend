@@ -39,12 +39,12 @@
 
     php artisan make:nut [资源名称] [-a/m/f/mi] [--force]
 
--a 创建资源的同时创建 Model Factory migrate
--M 创建资源的同时创建 Model
--f 创建资源的同时创建 Factory
--m 创建资源的同时创建 migrate
+    -a 创建资源的同时创建 Model Factory migrate
+    -M 创建资源的同时创建 Model
+    -f 创建资源的同时创建 Factory
+    -m 创建资源的同时创建 migrate
 
---force 创建资源，即使资源已经存在仍旧创建
+    --force 创建资源，即使资源已经存在仍旧创建
 
 ## License
 
