@@ -1,0 +1,28 @@
+{
+    "name": "chestnut/laravel-chestnut",
+    "description": "Laravel Chestnut is an Dashboard builder",
+    "type": "library",
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "Leon Zhang",
+            "email": "33543015@qq.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Chestnut\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Chestnut\\Providers\\ChestnutServiceProvider"
+            ],
+            "aliases": {
+                "Shell": "Chestnut\\Facades\\Shell"
+            }
+        }
+    },
+    "minimum-stability": "dev"
+}

@@ -1,0 +1,11 @@
+<?php
+
+namespace DummyNamespace;
+
+use Chestnut\Dashboard\Nut;
+use Chestnut\Facades\Shell;
+
+class DummyClass extends Nut
+{
+    //
+}
