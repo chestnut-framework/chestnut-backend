@@ -59,7 +59,10 @@ class ChestnutServiceProvider extends ServiceProvider
         $shell = $this->app->shell;
 
         $shell->nutsIn($this->app->config->get('chestnut.dashboard.nutsIn', app_path('Nuts')));
-        $shell->nuts([new Role(), new Permission()]);
+
+        if (config('chestnut.auth.rbac', false)) {
+            $shell->nuts([new Role(), new Permission()]);
+        }
 
         // Uploader::registerRoute($this->app->router);
         Gate::before(function ($user) {
