@@ -14,7 +14,7 @@ return [
         /**
          * Enable Role-base access control
          */
-        'rbac' => true,
+        'rbac' => false,
     ],
 
     /**
