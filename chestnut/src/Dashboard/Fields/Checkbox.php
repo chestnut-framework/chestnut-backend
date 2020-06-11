@@ -3,19 +3,18 @@ namespace Chestnut\Dashboard\Fields;
 
 class Checkbox extends Field
 {
-    public $edit_only = true;
-    public $creatble  = true;
-    public $sources;
-
-    public function __construct($prop, $label, $sources = [])
+    public function __construct($prop, $label)
     {
         parent::__construct($prop, $label, "c-checkbox");
-
-        $this->sources($sources);
     }
 
-    public function sources($sources)
+    public function options($options)
     {
-        $this->sources = $sources;
+        return $this->setAttribute('options', $options);
+    }
+
+    public function prop($prop)
+    {
+        return $this->setAttribute('prop', $prop);
     }
 }

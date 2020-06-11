@@ -51,11 +51,16 @@ class Shell
      *
      * @return void
      */
-    public function nuts(array $nuts)
+    public function nuts(?array $nuts)
     {
         foreach ($nuts as $nut) {
             $this->nut(is_string($nut) ? new $nut() : $nut);
         }
+    }
+
+    public function getNuts()
+    {
+        return $this->container;
     }
 
     /**
@@ -67,14 +72,13 @@ class Shell
      */
     public function nutsIn(string $directory = 'app/Nuts')
     {
-        if (!Cache::has('nutsClassCached') || Cache::get('nutsLastModified') != File::lastModified($directory)) {
+        $nuts = Cache::get('nutsClassCached');
+
+        if (Cache::get('nutsLastModified') != File::lastModified($directory)) {
             $nuts = $this->getNutsInDirectory($directory);
 
             Cache::forever('nutsLastModified', File::lastModified($directory));
             Cache::forever('nutsClassCached', $nuts);
-        } else {
-            $nuts = Cache::get('nutsClassCached');
-
         }
 
         $this->nuts($nuts);

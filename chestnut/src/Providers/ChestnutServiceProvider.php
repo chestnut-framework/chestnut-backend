@@ -22,7 +22,6 @@ class ChestnutServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
         $this->app->singleton('shell', Shell::class);
         $this->commands($this->commands);
     }

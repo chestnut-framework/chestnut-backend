@@ -8,7 +8,7 @@ use Chestnut\Facades\Shell;
 class Permission extends Nut
 {
     //
-    protected $namespace = 'Spatie\Permission\Models';
+    protected $namespace = 'Chestnut\Auth\Models';
 
     public function fields()
     {

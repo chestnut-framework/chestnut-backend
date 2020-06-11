@@ -14,12 +14,11 @@ use JsonSerializable;
  * @package  Chestnut\Dashboard
  * @author   Leon Zhang <33543015@qq.com>
  */
-class Field implements JsonSerializable
+abstract class Field implements JsonSerializable
 {
     public $prop;
     public $label;
     public $component;
-    public $enum;
     public $attrs;
     public $hidden;
 
@@ -153,18 +152,6 @@ class Field implements JsonSerializable
         $rules = func_get_args();
 
         return $this->setAttribute("rules", $rules);
-    }
-
-    public function enum(array $enum)
-    {
-        $this->enum = $enum;
-
-        return $this;
-    }
-
-    public function convertEnum($key)
-    {
-        return $this->enum[$key];
     }
 
     /**

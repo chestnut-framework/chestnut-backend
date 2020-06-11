@@ -70,7 +70,7 @@ class NutMakeCommand extends GeneratorCommand
         $factory = Str::studly(class_basename($this->argument('name')));
 
         $this->call('make:factory', [
-            'name' => "{$factory}Factory",
+            'name'    => "{$factory}Factory",
             '--model' => $this->qualifyClass($this->getNameInput()),
         ]);
     }
@@ -99,7 +99,7 @@ class NutMakeCommand extends GeneratorCommand
         $table = Str::snake(Str::pluralStudly(class_basename($this->argument('name'))));
 
         $this->call('make:migration', [
-            'name' => "create_{$table}_table",
+            'name'     => "create_{$table}_table",
             '--create' => $table,
         ]);
     }
@@ -124,13 +124,13 @@ class NutMakeCommand extends GeneratorCommand
         return [
             ['all', 'a', InputOption::VALUE_NONE, 'Generate a migration, factory, and model for the nut'],
 
-            ['model', 'M', InputOption::VALUE_NONE, 'create a new model for the nut'],
+            ['model', 'm', InputOption::VALUE_NONE, 'create a new model for the nut'],
 
             ['factory', 'f', InputOption::VALUE_NONE, 'Create a new factory for the nut model'],
 
             ['force', null, InputOption::VALUE_NONE, 'Create the class even if the nut already exists'],
 
-            ['migration', 'm', InputOption::VALUE_NONE, 'Create a new migration file for the nut model'],
+            ['migration', 'mi', InputOption::VALUE_NONE, 'Create a new migration file for the nut model'],
         ];
     }
 

@@ -11,6 +11,8 @@ class User extends Nut
 {
     protected $with = ['info', 'roles:id,name'];
 
+    protected $except = ['roles'];
+
     public function fields()
     {
         return [
@@ -28,7 +30,6 @@ class User extends Nut
     public function registerRoutes($router)
     {
         $router->get('me', $this->getAction("me"));
-        $router->get('chart_data', $this->getAction("getCharts"));
     }
 
     public function me(Request $request)
@@ -36,15 +37,21 @@ class User extends Nut
         return ['code' => 200, 'data' => auth()->user()->info];
     }
 
-    public function saving($model, $props)
-    {
-        unset($model->roles);
-    }
-
     public function saved($model, $props)
     {
-        if (!$model->hasRole($props['roles'])) {
-            $model->assignRole($props['roles']);
+        $roles = $this->getExceptProp('roles');
+        $assignedRoles = $model->getRoleNames();
+
+        $removeRoles = $assignedRoles->diff($roles);
+
+        foreach ($removeRoles as $remove) {
+            $model->removeRole($remove);
         }
+
+        if (empty($roles)) {
+            return;
+        }
+
+        $model->assignRole($roles);
     }
 }

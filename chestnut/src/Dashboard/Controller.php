@@ -130,14 +130,6 @@ class Controller
             return $field->showInTable();
         })->values();
 
-        foreach ($fields as $field) {
-            if (isset($field->enum)) {
-                foreach ($model as $item) {
-                    $item[$field->prop] = $field->convertEnum($item[$field->prop]);
-                }
-            }
-        }
-
         $data = [
             'code' => 200,
             'data' => $model->items(),
@@ -179,12 +171,6 @@ class Controller
             return $field->showInDetail();
         });
         $item = $query->find($id);
-
-        foreach ($fields as $field) {
-            if (isset($field->enum)) {
-                $item[$field->prop] = $field->convertEnum($item[$field->prop]);
-            }
-        }
 
         $data = [
             'code' => 200,
@@ -311,14 +297,35 @@ class Controller
     protected function getProps(Request $request)
     {
         $fields = $this->getFields();
+        $except = $this->except ?? [];
 
         $prop_names = $fields->filter(function ($field) {
             return !$field->isReadonly() || $field->showInCreate();
-        })->pluck("prop")->all();
+        })->pluck("prop");
+
+        if (count($except) > 0) {
+            $prop_names = $fields->filter(function ($prop) use ($except) {
+                return !in_array($prop, $except);
+            });
+        }
 
         $props = $request->only($prop_names);
 
         return $props;
+    }
+
+    public function getExceptRequest()
+    {
+        return app('request')->only($this->except);
+    }
+
+    public function getExceptProp($prop)
+    {
+        if (!in_array($prop, $this->except)) {
+            throw new Error("prop [$prop] not except");
+        }
+
+        return isset($this->getExceptRequest()[$prop]) ? $this->getExceptRequest()[$prop] : [];
     }
 
     public function validate($request)
