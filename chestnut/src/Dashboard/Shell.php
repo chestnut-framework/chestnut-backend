@@ -2,19 +2,31 @@
 
 namespace Chestnut\Dashboard;
 
-use Arr;
 use BadMethodCallException;
+use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Auth\User;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use JsonSerializable;
 use ReflectionClass;
-use Str;
 
 /**
- * Laravel administrator
+ * Chestnut resource manager
+ *
+ * @method static Chestnut\Dashboard\Fields\Avatar Avatar($prop, $label)
+ * @method static Chestnut\Dashboard\Fields\Checkbox Checkbox($prop, $label)
+ * @method static Chestnut\Dashboard\Fields\CreatedAt CreatedAt($label)
+ * @method static Chestnut\Dashboard\Fields\Datetime Datetime($prop, $label)
+ * @method static Chestnut\Dashboard\Fields\Editor Editor($prop, $label)
+ * @method static Chestnut\Dashboard\Fields\ID ID($label)
+ * @method static Chestnut\Dashboard\Fields\Image Image($prop, $label)
+ * @method static Chestnut\Dashboard\Fields\Password Password($prop, $label)
+ * @method static Chestnut\Dashboard\Fields\Select Select($prop, $label)
+ * @method static Chestnut\Dashboard\Fields\SoftDelete SoftDelete($label)
+ * @method static Chestnut\Dashboard\Fields\Text Text($prop, $label)
  */
-class Shell
+class Shell implements Jsonable, JsonSerializable
 {
     public $app;
     public $container;
@@ -26,7 +38,7 @@ class Shell
      */
     public function __construct(Application $app)
     {
-        $this->app = $app;
+        $this->app       = $app;
         $this->container = collect([]);
     }
 
@@ -54,6 +66,10 @@ class Shell
     public function nuts(?array $nuts)
     {
         foreach ($nuts as $nut) {
+            if ($nut == '\App\Nuts\Home') {
+                continue;
+            }
+
             $this->nut(is_string($nut) ? new $nut() : $nut);
         }
     }
@@ -90,9 +106,9 @@ class Shell
 
         $nuts = [];
         foreach ($files as $file) {
-            $fp = fopen($file, 'r');
+            $fp    = fopen($file, 'r');
             $class = $namespace = $buffer = '';
-            $i = 0;
+            $i     = 0;
             while (!$class) {
                 if (feof($fp)) {
                     break;
@@ -132,7 +148,28 @@ class Shell
         return $nuts;
     }
 
-    public function modules()
+    public function toJson($options = 0)
+    {
+        $json = json_encode($this->jsonSerialize(), $options);
+
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            throw new \Exception(json_last_error_msg());
+        }
+
+        return $json;
+    }
+
+    public function jsonSerialize()
+    {
+        return ["nuts" => $this->getModules()];
+    }
+
+    public function __toString()
+    {
+        return $this->toJson();
+    }
+
+    public function getModules()
     {
         $user = auth()->user();
 
@@ -141,26 +178,10 @@ class Shell
                 return false;
             }
 
-            return [$nut->getName() => $nut->getVueRoute($user)];
+            return [$nut->getName() => ["components" => $nut->getComponents(), "actions" => $nut->getActions(), "statistic" => $nut->statistic, "text" => $nut->getName()]];
         });
 
         return Arr::collapse($modules);
-    }
-
-    public function sidebars()
-    {
-        $user = auth()->user();
-
-        $modules = $this->container->map(function ($nut) use ($user) {
-            if (!$user->can("{$nut->getName()}.*")) {
-                return false;
-            }
-
-            return $nut->getSideBar();
-        });
-
-        return $modules;
-
     }
 
     public function __call($name, $arguments)
@@ -172,5 +193,16 @@ class Shell
         }
 
         throw new BadMethodCallException("Method [$name] not found in [" . get_class($this) . "]");
+    }
+
+    public static function __callStatic($name, $arguments)
+    {
+        if (class_exists("Chestnut\\Dashboard\\Fields\\" . $name)) {
+            $class = new ReflectionClass("Chestnut\\Dashboard\\Fields\\" . $name);
+
+            return $class->newInstanceArgs($arguments);
+        }
+
+        throw new BadMethodCallException("Method [$name] not found in [" . static::class . "]");
     }
 }

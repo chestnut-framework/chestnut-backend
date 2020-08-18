@@ -70,7 +70,7 @@ abstract class Field implements JsonSerializable
      */
     public function sortable()
     {
-        return $this->setAttribute('sortable', true);
+        return $this->setAttribute('sortable', 'custom');
     }
 
     /**
@@ -89,17 +89,12 @@ abstract class Field implements JsonSerializable
 
     public function onlyCreate()
     {
-        return $this->hideInTable()->hideInEdit()->hideInDetail();
+        return $this->hideInTable()->hideInEdit();
     }
 
     public function onlyEdit()
     {
-        return $this->hideInTable()->hideInCreate()->hideInDetail();
-    }
-
-    public function onlyDetail()
-    {
-        return $this->hideInTable()->hideInCreate()->hideInEdit();
+        return $this->hideInTable()->hideInCreate();
     }
 
     public function onlyTable()
@@ -122,11 +117,6 @@ abstract class Field implements JsonSerializable
         return $this->hiddenIn("edit");
     }
 
-    public function hideInDetail()
-    {
-        return $this->hiddenIn("detail");
-    }
-
     public function showInTable()
     {
         return !$this->hidden->get('table', false);
@@ -140,11 +130,6 @@ abstract class Field implements JsonSerializable
     public function showInEdit()
     {
         return !$this->hidden->get('edit', false);
-    }
-
-    public function showInDetail()
-    {
-        return !$this->hidden->get('detail', false);
     }
 
     public function rules()

@@ -13,9 +13,12 @@ class LoginController extends Controller
 
     public function apiLogin(Request $request)
     {
-        $credentials = $request->only('phone', 'password');
+        $password = $request->password;
 
-        if (Auth::attempt($credentials)) {
+        $phone = $request->username;
+        $email = $request->username;
+
+        if (Auth::attempt(['password' => $password, 'phone' => $phone]) || Auth::attempt(['password' => $password, 'email' => $email])) {
             $user = auth()->user();
             $api_token = Str::random(64);
 
@@ -34,7 +37,6 @@ class LoginController extends Controller
 
             return [
                 "code" => 200,
-                "message" => "login success",
                 "token" => base64_encode($token . '.' . app('hash')->make($token)),
             ];
 
@@ -42,7 +44,7 @@ class LoginController extends Controller
 
         return [
             'code' => 400,
-            'message' => "Login Failed.",
+            'message' => __("auth.failed"),
         ];
     }
 

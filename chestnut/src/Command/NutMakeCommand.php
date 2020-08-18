@@ -43,10 +43,10 @@ class NutMakeCommand extends GeneratorCommand
 
         if ($this->option('all')) {
             $this->input->setOption('factory', true);
-            $this->input->setOption('model', true);
             $this->input->setOption('migration', true);
         }
 
+        $this->input->setOption('model', true);
         if ($this->option('model')) {
             $this->createModel();
         }
@@ -124,13 +124,11 @@ class NutMakeCommand extends GeneratorCommand
         return [
             ['all', 'a', InputOption::VALUE_NONE, 'Generate a migration, factory, and model for the nut'],
 
-            ['model', 'm', InputOption::VALUE_NONE, 'create a new model for the nut'],
-
             ['factory', 'f', InputOption::VALUE_NONE, 'Create a new factory for the nut model'],
 
             ['force', null, InputOption::VALUE_NONE, 'Create the class even if the nut already exists'],
 
-            ['migration', 'mi', InputOption::VALUE_NONE, 'Create a new migration file for the nut model'],
+            ['migration', 'm', InputOption::VALUE_NONE, 'Create a new migration file for the nut model'],
         ];
     }
 

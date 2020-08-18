@@ -2,60 +2,56 @@
 
 namespace Chestnut\Dashboard\ORMDriver;
 
-class EloquentDriver
-{
-    public $model;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
+class EloquentDriver extends Driver
+{
+    /**
+     * Relations for model
+     *
+     * @var array
+     */
     public $with;
 
-    public function __construct($name)
-    {
-        $this->model = $name;
-    }
-
-    public function setWith(array $with)
-    {
-        $this->with = $with;
-    }
-
     /**
-     * Get Resource Model
-     * Default namespace is App
+     * Generate Eloquent query
      *
-     * Set namespace by define $namespace in class parameter
-     *
-     * @return Model
+     * @return Illuminate\Database\Eloquent\Builder
      */
-    public function getModel()
-    {
-        $model = new $this->model();
-
-        return $model;
-    }
-
     public function getQuery()
     {
-        $query = $this->getModel();
+        $query = parent::getQuery();
 
         if (isset($this->with)) {
             $query = $query->with($this->with);
         }
 
+        if ($this->isSoftDelete()) {
+            $query = $query->withTrashed();
+        }
+
         return $query;
     }
 
-    public function tableQuery($query)
+    /**
+     * Determine model has softdelete
+     *
+     * @return boolean
+     */
+    public function isSoftDelete(): bool
     {
-        return $query;
+        return in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($this->getModel()));
     }
 
-    public function detailQuery($query)
+    /**
+     * Find model by id
+     *
+     * @param integer $id
+     * @return Illuminate\Database\Eloquent\Model
+     */
+    public function find($id): Model
     {
-        return $query;
-    }
-
-    public function editorQuery($query)
-    {
-        return $query;
+        return $this->getQuery()->find($id);
     }
 }

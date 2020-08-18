@@ -15,7 +15,32 @@ class Role extends Nut
 
     protected $with = ['permissions:id,name'];
 
-    public function fields()
+    public function boot()
+    {
+        $model = $this->getModel();
+
+        $model::saved(function ($model) {
+            $permissions = $this->getExceptProp('permissions');
+            $gavePermissions = $model->getPermissionNames();
+            $removePermissions = $gavePermissions->diff($permissions);
+
+            foreach ($removePermissions as $remove) {
+                $model->revokePermissionTo($remove);
+            }
+
+            if (empty($permissions)) {
+                return;
+            }
+
+            $permissions = collect($permissions)->map(function ($permission) {
+                return Permission::firstOrCreate(['name' => $permission]);
+            });
+
+            $model->givePermissionTo($permissions);
+        });
+    }
+
+    public function fields(): array
     {
         $options = app('shell')->getNuts()->map(function ($nut) {
             return $nut->getName();
@@ -43,31 +68,10 @@ class Role extends Nut
         return __("chestnut::chestnut.permission.manager");
     }
 
-    public function registerRoutes($router)
-    {
-        $router->get('all', function () {
-            return ['code' => 200, 'data' => $this->getModel()->all()];
-        });
-    }
-
-    public function saved($model, $prop)
-    {
-        $permissions = $this->getExceptProp('permissions');
-        $gavePermissions = $model->getPermissionNames();
-        $removePermissions = $gavePermissions->diff($permissions);
-
-        foreach ($removePermissions as $remove) {
-            $model->revokePermissionTo($remove);
-        }
-
-        if (empty($permissions)) {
-            return;
-        }
-
-        $permissions = collect($permissions)->map(function ($permission) {
-            return Permission::firstOrCreate(['name' => $permission]);
-        });
-
-        $model->givePermissionTo($permissions);
-    }
+    // public function registerRoutes($router)
+    // {
+    //     $router->get('all', function () {
+    //         return ['code' => 200, 'data' => $this->getQuery()->all()];
+    //     });
+    // }
 }

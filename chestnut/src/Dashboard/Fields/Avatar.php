@@ -5,6 +5,6 @@ class Avatar extends Field
 {
     public function __construct($prop, $label)
     {
-        parent::__construct($prop, $label, "c-avatar");
+        parent::__construct($prop, $label, "c-image");
     }
 }

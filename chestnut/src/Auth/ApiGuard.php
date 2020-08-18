@@ -2,11 +2,11 @@
 
 namespace Chestnut\Auth;
 
-use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\Request;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
-use Illuminate\Http\Request;
+use Illuminate\Auth\AuthenticationException;
 
 class ApiGuard implements Guard
 {

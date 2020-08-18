@@ -1,10 +1,10 @@
 <?php
 namespace Chestnut\Dashboard\Fields;
 
-class TextArea extends Field
+class Editor extends Field
 {
     public function __construct($prop, $label)
     {
-        parent::__construct($prop, $label, "c-textarea");
+        parent::__construct($prop, $label, "c-editor");
     }
 }

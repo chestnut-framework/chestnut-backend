@@ -17,5 +17,5 @@ Route::get(env("CHESTNUT_PATH_PREFIX", "admin") . "{any}", function () {
 })->where('any', '(?!api).*');
 
 Route::prefix('api')->middleware('api', 'auth:api')->get('/options', function () {
-    return ['code' => 200, 'message' => 'request success', 'data' => ['modules' => app('shell')->modules(), 'sidebar' => app('shell')->sidebars()]];
+    return ['code' => 200, 'message' => 'request success', 'data' => app('shell')];
 });

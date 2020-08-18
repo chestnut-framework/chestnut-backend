@@ -1,16 +1,92 @@
 <?php
+
 namespace Chestnut\Dashboard;
 
 use App\User;
 use Chestnut\Dashboard\Exceptions\NutCreateException;
-use Chestnut\Dashboard\ORMDriver\EloquentDriver;
+use Chestnut\Dashboard\ORMDriver\Driver;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Collection;
+use Str;
 
 class Controller
 {
+    /**
+     * Resource eloquent model namespace
+     *
+     * @var string
+     */
+    protected $namespace = "App";
+
+    /**
+     * ORM Drivers
+     *
+     * @var array
+     */
     protected $ormDriver = [];
+
+    /**
+     * Front end search columns
+     *
+     * @var array
+     */
+    protected $search = [];
+
+    /**
+     * Front end list component
+     *
+     * @var string
+     */
+    protected $listComponent = 'Table';
+
+    /**
+     * Front end editor component
+     *
+     * @var string
+     */
+    protected $editorComponent = "Editor";
+
+    /**
+     * Resource name
+     *
+     * @var string
+     */
+    private $_name;
+
+    /**
+     * Resource eloquent model
+     *
+     * @var string
+     */
+    protected $model;
+
+    /**
+     * Resource Construct
+     */
+    public function __construct()
+    {
+        $this->model = $this->_getModelName();
+        $this->_name = strtolower($this->model);
+
+        $this->boot();
+    }
+
+    public function boot()
+    {
+    }
+
+    /**
+     * Get resource name
+     *
+     * @return String
+     */
+    private function _getModelName(): string
+    {
+        $name = explode("\\", get_class($this));
+
+        return array_pop($name);
+    }
 
     /**
      * Get Resource Action string
@@ -19,9 +95,19 @@ class Controller
      *
      * @return string
      */
-    public function getAction(string $action)
+    public function getAction(string $action): string
     {
         return static::class . "@" . $action;
+    }
+
+    /**
+     * Resource struct
+     *
+     * @return array
+     */
+    public function fields(): array
+    {
+        return [];
     }
 
     /**
@@ -29,13 +115,23 @@ class Controller
      *
      * @return Iluminate/Support/Collection
      */
-    public function getFields()
+    public function getFields(): Collection
     {
-        return method_exists($this, 'fields') ? collect($this->fields()) : collect([]);
+        return collect($this->fields());
     }
 
-    public function getORMDriver($driver = "eloquent")
+    /**
+     * Get ORM Driver
+     *
+     * @param string $driver
+     * @return Chestnut\Dashboard\ORMDriver\Driver
+     */
+    public function getORMDriver($driver = null): Driver
     {
+        if (is_null($driver)) {
+            $driver = config("chestnut.dashboard.driver");
+        }
+
         if (!isset($this->ormDriver[$driver])) {
             return $this->defaultORMDriver();
         }
@@ -43,145 +139,161 @@ class Controller
         return $this->ormDriver[$driver];
     }
 
-    public function defaultORMDriver()
+    /**
+     * Get default orm driver
+     *
+     * @return Chestnut\Dashboard\ORMDriver\Driver
+     */
+    public function defaultORMDriver(): Driver
     {
-        if (isset($this->ormDriver["eloquent"])) {
-            return $this->ormDriver["eloquent"];
+        $default = config('chestnut.dashboard.driver');
+
+        if (isset($this->ormDriver[$default])) {
+            return $this->ormDriver[$default];
         }
 
-        $driver = new EloquentDriver($this->getModel());
+        $driver = config('chestnut.dashboard.drivers.' . $default);
+
+        $driver = new $driver($this->getModel());
 
         if (isset($this->with)) {
             $driver->setWith($this->with);
         }
 
-        $this->setORMDriver("eloquent", $driver);
+        $this->setORMDriver($default, $driver);
 
         return $driver;
     }
 
-    public function setORMDriver($driver = "eloquent", $driverInstance)
+    /**
+     * Store driver instance
+     *
+     * @param string $driver
+     * @param Chestnut\Dashboard\ORMDriver\Driver $driverInstance
+     * @return void
+     */
+    public function setORMDriver($driver, $driverInstance)
     {
         $this->ormDriver[$driver] = $driverInstance;
     }
 
-    public function before(User $user)
+    /**
+     * Get a new query builder for the model's table.
+     *
+     * @return Model
+     */
+    public function newQuery()
     {
-        if ($user->roles['type'] == 'admin') {
-            return true;
-        }
+        return $this->getORMDriver()->getQuery();
     }
 
-    public function create(User $user)
-    {
-        return $user->can("{$this->getName()}.create");
-    }
-
-    public function update(User $user)
-    {
-        return $user->can("{$this->getName()}.edit");
-    }
-
-    public function delete(User $user)
-    {
-        return $user->can("{$this->getName()}.delete");
-    }
-
-    public function getCreate()
-    {
-        $fields = $this->getFields();
-
-        $fields = $fields->filter(function ($field) {
-            return $field->showInCreate();
-        });
-
-        return $fields->map(function ($field) {
-            if ($field->isReadonly()) {
-                $field->setAttribute('readonly', false);
-            }
-
-            return $field;
-        })->values();
-    }
-
+    /**
+     * Action table by [GET] Request
+     *
+     * @param Request $request
+     * @return array
+     */
     public function getTable(Request $request)
     {
         $driver = $this->getORMDriver();
 
         $query = $driver->getQuery();
-        $query = $driver->tableQuery($query);
 
-        $size = $request->input('pageSize', 10);
-
-        $query = $query->orderBy($request->input('sortBy', 'created_at'), $request->input('descending', 'desc'));
-
-        if (method_exists($this, "beforeGet")) {
-            $this->beforeGet($query);
+        foreach ($this->search as $search) {
+            $query = $query->where($search, 'like', "%{$request->get('search')}%");
         }
+
+        $filters = $request->input("filters");
+
+        if ($filters != "") {
+            foreach (explode("|", $filters) as $filter) {
+                return $filters;
+                list($filter, $filterData) = explode(":", $filter);
+
+                $query->whereIn($filter, explode(",", $filterData));
+            }
+        }
+
+        $size = $request->get('size', 10);
+
+        $this->sort($query, $request);
 
         $model = $query->paginate($size);
-
-        if (method_exists($this, "afterGet")) {
-            $this->afterGet($model);
-        }
-
-        $fields = $this->getFields();
-        $fields = $fields->filter(function ($field) {
-            return $field->showInTable();
-        })->values();
-
-        $data = [
-            'code' => 200,
-            'data' => $model->items(),
+        $data  = [
+            'code'  => 200,
+            'data'  => $model->items(),
             'total' => $model->total(),
-            'columns' => $fields,
         ];
 
         return $data;
     }
 
-    public function getEdit(Request $request, $id)
+    /**
+     * Resolve sort options to query
+     *
+     * @param Illuminate\Database\Builder $query
+     * @param Illuminate\Http\Request $request
+     * @return void
+     */
+    private function sort($query, $request)
+    {
+        $sort = $request->input('sortBy', "created_at:desc");
+
+        list($column, $order) = explode(":", $sort);
+
+        if (strpos($column, ".")) {
+            list($relation, $column) = explode(".", $column);
+
+            $query->whereHas($relation, function ($query) use ($column, $order) {
+                $query->orderBy($column, $order);
+            });
+        } else {
+            $query->orderBy($column, $order);
+        }
+    }
+
+    /**
+     * Action edit by [GET] request
+     *
+     * @param integer $id
+     * @return array
+     */
+    public function getEdit($id)
     {
         $driver = $this->getORMDriver();
 
         $query = $driver->getQuery();
-        $query = $driver->editorQuery($query);
-
-        $fields = $this->getFields();
 
         $data = [
             'code' => 200,
             'data' => $query->find($id),
-            'columns' => $fields->filter(function ($field) {
-                return $field->showInEdit();
-            })->values(),
         ];
 
         return $data;
     }
 
-    public function getDetail(Request $request, $id)
+    /**
+     * Action columns by [GET] request
+     *
+     * @return array
+     */
+    public function getColumns()
     {
-        $driver = $this->getORMDriver();
+        $fields = $this->getFields();
 
-        $query = $driver->getQuery();
-        $query = $driver->detailQuery($query);
+        if ($this->isSoftDelete()) {
+            $fields->push(Shell::SoftDelete('删除时间'));
+        }
 
-        $fields = $this->getFields()->filter(function ($field) {
-            return $field->showInDetail();
-        });
-        $item = $query->find($id);
-
-        $data = [
-            'code' => 200,
-            'data' => $item,
-            'columns' => $fields->values(),
-        ];
-
-        return $data;
-
+        return ['code' => 200, 'data' => $fields];
     }
 
+    /**
+     * Destroy model
+     *
+     * @param Request $request
+     * @return array
+     */
     public function destroy(Request $request)
     {
         if (!$request->user()->can('delete', $this->namespace . $this->getName())) {
@@ -193,6 +305,13 @@ class Controller
         return ["code" => 200, 'message' => "删除成功"];
     }
 
+    /**
+     * Action modify resource by [PUT] request
+     *
+     * @param Request $request
+     * @param integer $id
+     * @return array
+     */
     public function putEdit(Request $request, $id)
     {
         if (!$request->user()->can('update', $this->namespace . $this->getName())) {
@@ -200,8 +319,6 @@ class Controller
         }
 
         $query = $this->getORMDriver()->getQuery();
-
-        $validator = $this->validate($request);
 
         $model = $query->find($id);
 
@@ -214,26 +331,37 @@ class Controller
             }
         }
 
-        if (method_exists($this, "saving")) {
-            $this->saving($model, $props);
-        }
-
         if ($model->push()) {
-            if (method_exists($this, "saved")) {
-                $this->saved($model, $props);
-            }
-
             return ["code" => 200, "message" => "编辑成功"];
         }
     }
 
+    /**
+     * Restore resource by [PUT] request
+     *
+     * @param Request $request
+     * @return array
+     */
+    public function putRestore(Request $request)
+    {
+        $model = $this->newQuery()->find($request->id);
+
+        $model->restore();
+
+        return ["code" => 200, "message" => "还原成功"];
+    }
+
+    /**
+     * Action store resource by [POST] request
+     *
+     * @param Request $request
+     * @return array
+     */
     public function postCreate(Request $request)
     {
         if (!$request->user()->can('create', $this->namespace . $this->getName())) {
             return response()->json(["message" => "未获得创建权限"], 403);
         }
-
-        $validator = $this->validate($request);
 
         $props = $this->getProps($request);
 
@@ -249,12 +377,7 @@ class Controller
             }
         }
 
-        if (method_exists($this, "saving")) {
-            $this->saving($model, $props);
-        }
-
         if ($model->save()) {
-
             if (count($relations) > 0) {
                 foreach ($relations as $relation => $attributes) {
                     $relationAttributes = collect();
@@ -266,14 +389,18 @@ class Controller
                 }
             }
 
-            if (method_exists($this, "saved")) {
-                $this->saved($model, $props);
-            }
-
             return ["code" => 200, "message" => "创建成功"];
         }
     }
 
+    /**
+     * Set resource property
+     *
+     * @param [type] $obj
+     * @param [type] $prop
+     * @param [type] $value
+     * @return void
+     */
     protected function setAttribute($obj, $prop, $value)
     {
         if ($obj === null) {
@@ -282,16 +409,22 @@ class Controller
 
         if (is_array($value)) {
             foreach ($value as $key => $val) {
-                $this->setAttribute($obj[$prop], $key, $val);
+                if (is_int($key)) {
+                    $this->setAttribute($obj, $prop, $val);
+                } else {
+                    $this->setAttribute($obj[$prop], $key, $val);
+                }
             }
             return;
         }
 
         if ($value instanceof UploadedFile) {
             $value = '/storage' . substr($value->store('public/uploads'), 6);
-        }
 
-        $obj[$prop] = $value;
+            $obj[$prop] = empty($obj[$prop]) ? $value : $obj[$prop] . ",$value";
+        } else {
+            $obj[$prop] = $value;
+        }
     }
 
     protected function getProps(Request $request)
@@ -304,12 +437,12 @@ class Controller
         })->pluck("prop");
 
         if (count($except) > 0) {
-            $prop_names = $fields->filter(function ($prop) use ($except) {
+            $prop_names = $prop_names->filter(function ($prop) use ($except) {
                 return !in_array($prop, $except);
             });
         }
 
-        $props = $request->only($prop_names);
+        $props = $request->only($prop_names->all());
 
         return $props;
     }
@@ -322,22 +455,39 @@ class Controller
     public function getExceptProp($prop)
     {
         if (!in_array($prop, $this->except)) {
-            throw new Error("prop [$prop] not except");
+            throw new \Error("prop [$prop] not except");
         }
 
         return isset($this->getExceptRequest()[$prop]) ? $this->getExceptRequest()[$prop] : [];
     }
 
-    public function validate($request)
+    /**
+     * Get Resource name
+     *
+     * @return String
+     */
+    public function getName()
     {
-        $fields = $this->getFields();
+        return $this->_name;
+    }
 
-        $validates = $fields->pluck('validate', 'prop')->reject(function ($item, $prop) {
-            return is_null($item) || $prop == 'password';
-        })->all();
+    /**
+     * Get resource model name
+     *
+     * @return void
+     */
+    public function getModel()
+    {
+        return $this->namespace . '\\' . $this->model;
+    }
 
-        $attributes = $fields->pluck('label', 'prop')->all();
-
-        return Validator::make($request->all(), $validates, [], $attributes)->validate();
+    /**
+     * Determine resource model enabled softdelete
+     *
+     * @return boolean
+     */
+    public function isSoftDelete()
+    {
+        return $this->getORMDriver()->isSoftDelete();
     }
 }

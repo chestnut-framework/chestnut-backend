@@ -1,17 +1,12 @@
 <?php
 namespace Chestnut\Dashboard\Fields;
 
-use Illuminate\Support\Facades\Hash;
-
 class Password extends Field
 {
     public function __construct($prop, $label)
     {
-        parent::__construct($prop, $label, "c-password");
-    }
+        parent::__construct($prop, $label, "el-input");
 
-    public function process($value)
-    {
-        return Hash::make($value);
+        $this->setAttribute('show-password', true);
     }
 }

@@ -4,7 +4,7 @@ return [
     /**
      * Chestnut Auth config
      */
-    'auth' => [
+    'auth'      => [
 
         /**
          * Api token expire time.
@@ -14,10 +14,31 @@ return [
         /**
          * Enable Role-base access control
          */
-        'rbac' => false,
+        'rbac'   => true,
     ],
 
+    /**
+     * Chestnut Dashboard config
+     */
     'dashboard' => [
-        'nutsIn' => app_path('Nuts'),
+
+        /**
+         * Nuts directory
+         */
+        'nutsIn'         => app_path('Nuts'),
+
+        /**
+         * Nut ORM Drivers
+         */
+        'drivers'        => [
+            'eloquent' => Chestnut\Dashboard\ORMDriver\EloquentDriver::class,
+        ],
+
+        /**
+         * Nut ORM default driver
+         */
+        'driver'         => 'eloquent',
+
+        'upload_storage' => 'upload',
     ],
 ];

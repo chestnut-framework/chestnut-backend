@@ -7,11 +7,6 @@ class Uploader
 {
     protected $directory;
 
-    public function constructor()
-    {
-        $this->directory = $config["upload_directory"];
-    }
-
     public static function registerRoute($router)
     {
         $router->prefix('api/')
@@ -26,7 +21,7 @@ class Uploader
         $response = [];
 
         foreach ($files as $name => $file) {
-            $response[$name] = '/storage' . substr($request->file($name)->store('public/uploads'), 6);
+            $response[$name] = '/storage' . substr($file->store(config("chestnut.dashboard.upload_storage")), 6);
         }
 
         return $response;

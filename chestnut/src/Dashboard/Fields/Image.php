@@ -8,8 +8,8 @@ class Image extends Field
         parent::__construct($prop, $label, "c-image");
     }
 
-    public function pathPrefix($prefix)
+    public function multiple()
     {
-        return $this->setAttribute('path_prefix', $prefix);
+        return $this->setAttribute('multiple', true);
     }
 }

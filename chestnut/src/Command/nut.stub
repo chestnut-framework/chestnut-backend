@@ -7,5 +7,13 @@ use Chestnut\Facades\Shell;
 
 class DummyClass extends Nut
 {
-    //
+    // Response resource relations
+    // protected $with = [];
+
+    public function fields(): array
+    {
+        return [
+            // code resource fields here
+        ];
+    }
 }

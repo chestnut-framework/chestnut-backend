@@ -3,7 +3,6 @@
 namespace Chestnut\Dashboard;
 
 use Illuminate\Foundation\Application;
-use Str;
 
 /**
  * Laravel admin resource
@@ -13,41 +12,39 @@ use Str;
 class Nut extends Controller
 {
     /**
-     * Resource name
+     * Display nut in menu
+     *
+     * @var boolean
      */
-    private $_name;
+    protected $showInMenu = true;
 
     /**
-     * Resource eloquent model
+     * Get model with relations
+     *
+     * @var array
      */
-    protected $model;
-
-    /**
-     * Resource eloquent model namespace
-     */
-    protected $namespace = "App";
-
-    /**
-     * Configs
-     */
-    protected $config;
-
-    protected $displayInSideBar = true;
-
-    protected $actions = [];
-
-    protected $rowActions = [];
-
     protected $with;
 
     /**
-     * Resource Construct
+     * Nut's front end components
+     *
+     * @var array
      */
-    public function __construct()
-    {
-        $this->model = $this->_getModelName();
-        $this->_name = strtolower($this->model);
-    }
+    protected $components = [];
+
+    /**
+     * Nut's front end actions
+     *
+     * @var array
+     */
+    protected $actions = [];
+
+    /**
+     * Nut's statistic
+     *
+     * @var array
+     */
+    public $statistic = [];
 
     /**
      * Resource Register
@@ -64,111 +61,151 @@ class Nut extends Controller
                 function ($router) {
                     $this->registerDefaultRoutes($router);
 
-                    if (method_exists($this, 'registerRoutes')) {
-                        $this->registerRoutes($router);
-                    }
+                    $this->registerRoutes($router);
                 }
             );
 
-        $this->config = $app->config->get('chestnut.dashboard');
+        $this->registerDefaultComponents();
+        $this->registerComponents();
+        $this->registerDefaultActions();
+    }
+
+    /**
+     * Register route
+     *
+     * @param Illuminate\Routing\Router $router
+     * @return void
+     */
+    public function registerRoutes($router)
+    {
     }
 
     /**
      * Register resource routes
      *
+     * @param Illuminate\Routing\Router $router
      * @return void
      */
-    public function registerDefaultRoutes($router)
+    private function registerDefaultRoutes($router)
     {
         $router->get('', $this->getAction("getTable"));
-        $router->get('/{id}', $this->getAction("getDetail"))->where('id', '[0-9]+');
+        $router->get('/{id}', $this->getAction("getEdit"))->where('id', '[0-9]+');
         $router->put('/{id}', $this->getAction('putEdit'))->where('id', '[0-9]+');
+        $router->put('/restore', $this->getAction('putRestore'))->where('id', '[0-9]+');
         $router->post('', $this->getAction('postCreate'));
-        $router->get('/create', $this->getAction('getCreate'));
         $router->delete('', $this->getAction('destroy'));
+        $router->get('/columns', $this->getAction("getColumns"));
     }
 
     /**
-     * Get resource name
+     * Register Nut front end components
      *
-     * @return String
+     * @return void
      */
-    private function _getModelName()
+    public function registerComponents()
     {
-        $name = explode("\\", get_class($this));
 
-        return array_pop($name);
-    }
-
-    public function getVueRoute($user)
-    {
-        $name = Str::plural($this->getName());
-
-        $module = [
-            [
-                'path' => '',
-                'name' => ucfirst($name),
-                'props' => [
-                    'api' => $this->getName(),
-                    'text' => __('chestnut::chestnut.' . $this->getName()),
-                    'actions' => $this->actions,
-                    'rowActions' => $this->rowActions,
-                    'breadcrumbs' => [
-                        ["text" => __('chestnut::chestnut.index'), "to" => ["name" => "Dashboard"]],
-                        ["text" => __('chestnut::chestnut.' . $this->getName())],
-                    ],
-                ],
-            ],
-        ];
-
-        foreach (['create', 'edit', 'detail'] as $type) {
-            if (!$user->can($this->getName() . $type)) {
-                continue;
-            }
-
-            array_push($module, [
-                'path' => $type == "create" ? "$type" : ":id/$type",
-                'name' => ucfirst($name) . "." . $type,
-                'props' => [
-                    'api' => $this->getName(),
-                    'breadcrumbs' => [
-                        ["text" => __('chestnut::chestnut.index'), "to" => ["name" => "Dashboard"]],
-                        ["text" => __('chestnut::chestnut.' . $this->getName()), "to" => ["name" => ucfirst($name)]],
-                        ["text" => __("chestnut::chestnut.{$type}", ['name' => __("chestnut::chestnut.{$this->getName()}")])],
-                    ],
-
-                ],
-            ]);
-        }
-
-        return $module;
-    }
-
-    public function getSideBar()
-    {
-        $name = Str::plural($this->getName());
-
-        $sideBar = ["name" => __('chestnut::chestnut.' . $this->getName()), 'to' => ["name" => ucfirst($name)]];
-
-        if (\method_exists($this, 'group')) {
-            $sideBar['group'] = $this->group();
-        }
-
-        return $sideBar;
     }
 
     /**
-     * Get Resource name
+     * Register Nut default front end components
      *
-     * @return String
+     * @return void
      */
-    public function getName()
+    private function registerDefaultComponents()
     {
-        return $this->_name;
+        $name = $this->getName();
+
+        $this->registerComponent("Table", [
+            'name'       => $name,
+            'group'      => $this->group(),
+            'showInMenu' => $this->showInMenu,
+        ]);
+
+        $this->registerComponent("Editor", [
+            ["path" => $name . "/create", "name" => $name . ".create"],
+            ["path" => $name . "/:id/edit", "name" => $name . ".edit"],
+        ]);
     }
 
-    public function getModel()
+    /**
+     * Register component to nut front end
+     *
+     * @param string $component Component name
+     * @param array $options Component options
+     * @return void
+     */
+    public function registerComponent(string $component, array $options)
     {
-        return $this->namespace . '\\' . $this->model;
+        $this->components[$component] = $options;
+    }
+
+    /**
+     * Register action fo front end
+     *
+     * @param string $action
+     * @return void
+     */
+    public function registerAction(string $action)
+    {
+        array_push($this->actions, $this->getName() . "." . $action);
+    }
+
+    /**
+     * Register nut actions for front end
+     *
+     * @param array $actions
+     * @return void
+     */
+    public function registerActions(array $actions)
+    {
+    }
+
+    /**
+     * Register default actions
+     *
+     * @return void
+     */
+    private function registerDefaultActions()
+    {
+        $actions = ['delete'];
+
+        if ($this->isSoftDelete()) {
+            array_push($actions, 'restore');
+        }
+
+        foreach ($actions as $action) {
+            $this->registerAction($action);
+        }
+    }
+
+    /**
+     * Nut's Group
+     *
+     * @return void
+     */
+    public function group()
+    {
+        return null;
+    }
+
+    /**
+     * Get nut front end components
+     *
+     * @return array
+     */
+    public function getComponents(): array
+    {
+        return $this->components;
+    }
+
+    /**
+     * Get nut front end actions
+     *
+     * @return array
+     */
+    public function getActions(): array
+    {
+        return $this->actions;
     }
 }

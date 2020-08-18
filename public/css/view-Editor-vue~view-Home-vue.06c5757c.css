@@ -23,3 +23,25 @@
     display: block;
 }
 
+.header[data-v-864f6d60] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header > span[data-v-864f6d60] {
+    display: block;
+}
+.statistic[data-v-864f6d60] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+.statistic > div[data-v-864f6d60] {
+    flex: 1;
+}
+.statistic .count[data-v-864f6d60] {
+    color: red;
+    font-size: 32px;
+}
+

@@ -10,7 +10,7 @@ class Permission extends Nut
     //
     protected $namespace = 'Chestnut\Auth\Models';
 
-    public function fields()
+    public function fields(): array
     {
         return [
             Shell::ID(),
