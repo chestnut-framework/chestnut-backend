@@ -37,10 +37,9 @@
 
 ### 创建资源管理
 
-    php artisan make:nut [资源名称] [-a/m/f/mi] [--force]
+    php artisan make:nut [资源名称] [-a/f/m] [--force]
 
-    -a 创建资源的同时创建 Model Factory migrate
-    -M 创建资源的同时创建 Model
+    -a 创建资源的同时创建 Factory migrate
     -f 创建资源的同时创建 Factory
     -m 创建资源的同时创建 migrate
 
