@@ -1,8 +1,10 @@
 {
-    "name": "laravel/laravel",
+    "name": "chestnut/chestnut",
     "type": "project",
-    "description": "The Laravel Framework.",
+    "description": "The resource manage system with laravel",
     "keywords": [
+        "chestnut",
+        "resource",
         "framework",
         "laravel"
     ],
