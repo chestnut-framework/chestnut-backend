@@ -1,11 +1,11 @@
 <?php
 namespace Chestnut\Dashboard\Fields;
 
-class Editor extends Field
+class File extends Field
 {
     public function __construct($prop, $label)
     {
-        parent::__construct($prop, $label, "Editor");
+        parent::__construct($prop, $label, "File");
 
         $this->hideInTable();
     }

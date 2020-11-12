@@ -6,7 +6,7 @@ use BadMethodCallException;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use JsonSerializable;
 use ReflectionClass;
@@ -40,6 +40,18 @@ class Shell implements Jsonable, JsonSerializable
     {
         $this->app       = $app;
         $this->container = collect([]);
+
+        $this->boot();
+    }
+
+    /**
+     * Laravel chestnut shell bootstrap
+     *
+     * @return void
+     */
+    public function boot()
+    {
+
     }
 
     /**
@@ -66,10 +78,6 @@ class Shell implements Jsonable, JsonSerializable
     public function nuts(?array $nuts)
     {
         foreach ($nuts as $nut) {
-            if ($nut == '\App\Nuts\Home') {
-                continue;
-            }
-
             $this->nut(is_string($nut) ? new $nut() : $nut);
         }
     }
@@ -88,14 +96,15 @@ class Shell implements Jsonable, JsonSerializable
      */
     public function nutsIn(string $directory = 'app/Nuts')
     {
-        $nuts = Cache::get('nutsClassCached');
+        // $nuts = Cache::get('nutsClassCached');
 
-        if (Cache::get('nutsLastModified') != File::lastModified($directory)) {
-            $nuts = $this->getNutsInDirectory($directory);
+        // if (Cache::get('nutsLastModified') != File::lastModified($directory)) {
+        //     $nuts = $this->getNutsInDirectory($directory);
 
-            Cache::forever('nutsLastModified', File::lastModified($directory));
-            Cache::forever('nutsClassCached', $nuts);
-        }
+        //     Cache::forever('nutsLastModified', File::lastModified($directory));
+        //     Cache::forever('nutsClassCached', $nuts);
+        // }
+        $nuts = $this->getNutsInDirectory($directory);
 
         $this->nuts($nuts);
     }
@@ -171,7 +180,7 @@ class Shell implements Jsonable, JsonSerializable
 
     public function getModules()
     {
-        $user = auth()->user();
+        $user = Auth::user() ?? Auth::guard("chestnut")->user();
 
         $modules = $this->container->map(function ($nut) use ($user) {
             if (!$user->can("{$nut->getName()}.*")) {

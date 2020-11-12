@@ -1,14 +1,14 @@
 <?php
 
-namespace App;
+namespace Chestnut\Auth\Models;
 
-use Hash;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class Manager extends Authenticatable
 {
     use Notifiable, SoftDeletes, HasRoles;
 
@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'email', 'openid', 'phone', 'password',
+        'email', 'openid', 'phone', 'password', 'name',
     ];
 
     /**
@@ -39,7 +39,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    protected $dateFormat = 'Y-m-d H:i:s';
+    protected $dateFormat = "Y-m-d H:i:s";
 
     protected $guard_name = 'api';
 

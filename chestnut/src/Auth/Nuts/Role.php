@@ -15,13 +15,15 @@ class Role extends Nut
 
     protected $with = ['permissions:id,name'];
 
+    protected $icon = "user-circle";
+
     public function boot()
     {
         $model = $this->getModel();
 
         $model::saved(function ($model) {
-            $permissions = $this->getExceptProp('permissions');
-            $gavePermissions = $model->getPermissionNames();
+            $permissions       = $this->getExceptProp('permissions');
+            $gavePermissions   = $model->getPermissionNames();
             $removePermissions = $gavePermissions->diff($permissions);
 
             foreach ($removePermissions as $remove) {
@@ -65,13 +67,6 @@ class Role extends Nut
 
     public function group()
     {
-        return __("chestnut::chestnut.permission.manager");
+        return "permissions@user-group";
     }
-
-    // public function registerRoutes($router)
-    // {
-    //     $router->get('all', function () {
-    //         return ['code' => 200, 'data' => $this->getQuery()->all()];
-    //     });
-    // }
 }

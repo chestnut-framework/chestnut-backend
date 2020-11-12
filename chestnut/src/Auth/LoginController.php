@@ -15,11 +15,10 @@ class LoginController extends Controller
     {
         $password = $request->password;
 
-        $phone = $request->username;
-        $email = $request->username;
+        $account = $request->account;
 
-        if (Auth::attempt(['password' => $password, 'phone' => $phone]) || Auth::attempt(['password' => $password, 'email' => $email])) {
-            $user = auth()->user();
+        if (Auth::guard('chestnut')->attempt(['password' => $password, 'phone' => $account]) || Auth::guard('chestnut')->attempt(['password' => $password, 'email' => $account])) {
+            $user      = Auth::guard("chestnut")->user();
             $api_token = Str::random(64);
 
             $user->api_token = $api_token;
@@ -36,14 +35,14 @@ class LoginController extends Controller
             $token = json_encode($token_body);
 
             return [
-                "code" => 200,
+                "code"  => 200,
                 "token" => base64_encode($token . '.' . app('hash')->make($token)),
             ];
 
         }
 
         return [
-            'code' => 400,
+            'code'    => 400,
             'message' => __("auth.failed"),
         ];
     }
@@ -58,9 +57,9 @@ class LoginController extends Controller
             $response = $client->get(
                 'sns/jscode2session', [
                     'query' => [
-                        'appid' => env("MICROAPP_ID"),
-                        'secret' => env("MICROAPP_SECRET"),
-                        'js_code' => $code,
+                        'appid'      => env("MICROAPP_ID"),
+                        'secret'     => env("MICROAPP_SECRET"),
+                        'js_code'    => $code,
                         'grant_type' => 'authorization_code',
                     ],
                 ]
@@ -70,7 +69,7 @@ class LoginController extends Controller
 
             if ($user = User::where('openid', $data->openid)->orWhere('phone', $request->phone)->first()) {
                 $user->session_key = $data->session_key;
-                $token = $this->generateToken($user);
+                $token             = $this->generateToken($user);
 
                 if ($request->phone !== null) {
                     $user->openid = $data->openid;
@@ -79,31 +78,31 @@ class LoginController extends Controller
                 $user->save();
 
                 return [
-                    "code" => 200,
+                    "code"    => 200,
                     "message" => "login success",
-                    "token" => $this->encryptToken($token),
+                    "token"   => $this->encryptToken($token),
                 ];
             } else {
                 if ($request->phone !== null) {
                     return [
-                        "code" => -21,
+                        "code"    => -21,
                         "message" => "手机号码错误，找不到账号。",
                     ];
                 }
 
                 $user = User::create(
                     [
-                        'openid' => $data->openid,
+                        'openid'      => $data->openid,
                         'session_key' => $data->session_key,
-                        'role_id' => 1,
+                        'role_id'     => 1,
                     ]
                 );
                 $token = $this->generateToken($user);
 
                 return [
-                    "code" => 200,
+                    "code"    => 200,
                     "message" => "login success",
-                    "token" => $this->encryptToken($token),
+                    "token"   => $this->encryptToken($token),
                 ];
             }
 
@@ -111,7 +110,7 @@ class LoginController extends Controller
         }
 
         return [
-            "code" => -20,
+            "code"    => -20,
             "message" => "login failed, code not found.",
         ];
 

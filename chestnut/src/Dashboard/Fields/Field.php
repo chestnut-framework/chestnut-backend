@@ -31,11 +31,11 @@ abstract class Field implements JsonSerializable
      */
     public function __construct($prop, $label, $component)
     {
-        $this->prop = $prop;
-        $this->label = $label;
+        $this->prop      = $prop;
+        $this->label     = $label;
         $this->component = $component;
 
-        $this->attrs = collect();
+        $this->attrs  = collect();
         $this->hidden = collect();
     }
 
@@ -136,7 +136,7 @@ abstract class Field implements JsonSerializable
     {
         $rules = func_get_args();
 
-        return $this->setAttribute("rules", $rules);
+        return $this->setAttribute("rules", join("|", $rules));
     }
 
     /**
@@ -154,12 +154,12 @@ abstract class Field implements JsonSerializable
     public function jsonSerialize()
     {
         return [
-            "name" => $this->prop,
-            "label" => $this->label,
+            "name"      => $this->prop,
+            "label"     => $this->label,
             "component" => $this->component,
-            "align" => 'center',
-            "attrs" => $this->attrs->all(),
-            "hidden" => $this->hidden->all(),
+            "align"     => 'center',
+            "attrs"     => $this->attrs->all(),
+            "hidden"    => $this->hidden->all(),
         ];
     }
 

@@ -219,10 +219,10 @@ class Controller
         $this->sort($query, $request);
 
         $model = $query->paginate($size);
-        $data  = [
-            'code'  => 200,
-            'data'  => $model->items(),
-            'total' => $model->total(),
+
+        $data = [
+            'code' => 200,
+            'data' => $model,
         ];
 
         return $data;
@@ -419,7 +419,7 @@ class Controller
         }
 
         if ($value instanceof UploadedFile) {
-            $value = '/storage' . substr($value->store('public/uploads'), 6);
+            $value = asset($value->store(config("chestnut.dashboard.upload_storage")));
 
             $obj[$prop] = empty($obj[$prop]) ? $value : $obj[$prop] . ",$value";
         } else {

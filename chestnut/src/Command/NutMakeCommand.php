@@ -46,10 +46,7 @@ class NutMakeCommand extends GeneratorCommand
             $this->input->setOption('migration', true);
         }
 
-        $this->input->setOption('model', true);
-        if ($this->option('model')) {
-            $this->createModel();
-        }
+        $this->createModel();
 
         if ($this->option('factory')) {
             $this->createFactory();

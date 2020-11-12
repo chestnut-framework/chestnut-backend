@@ -15,20 +15,20 @@ return [
     |
      */
 
-    'paths' => ['api/*'],
+    'paths'                    => ['*'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods'          => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins'          => ['*'],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers'          => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers'          => [],
 
-    'max_age' => 10000,
+    'max_age'                  => 10000,
 
-    'supports_credentials' => true,
+    'supports_credentials'     => true,
 
 ];

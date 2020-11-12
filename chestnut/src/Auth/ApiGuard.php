@@ -2,11 +2,11 @@
 
 namespace Chestnut\Auth;
 
-use Illuminate\Http\Request;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
-use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\Request;
 
 class ApiGuard implements Guard
 {
@@ -64,10 +64,10 @@ class ApiGuard implements Guard
         $storageKey = 'api_token',
         $hash = false
     ) {
-        $this->hash = $hash;
-        $this->request = $request;
-        $this->provider = $provider;
-        $this->inputKey = $inputKey;
+        $this->hash       = $hash;
+        $this->request    = $request;
+        $this->provider   = $provider;
+        $this->inputKey   = $inputKey;
         $this->storageKey = $storageKey;
     }
 
@@ -95,10 +95,16 @@ class ApiGuard implements Guard
             try {
                 [$token, $signature] = explode('.', $authorization, 2);
             } catch (\Exception $e) {
+
+                if (!$this->checkMiddleware()) {
+                    $this->user = $user;
+                    return;
+                }
+
                 throw new AuthenticationException(
                     json_encode(
                         [
-                            "code" => -10,
+                            "code"    => -10,
                             "message" => "Authorization illegality",
                         ]
                     )
@@ -106,10 +112,15 @@ class ApiGuard implements Guard
             }
 
             if (!app('hash')->check($token, $signature)) {
+                if (!$this->checkMiddleware()) {
+                    $this->user = $user;
+                    return;
+                }
+
                 throw new AuthenticationException(
                     json_encode(
                         [
-                            "code" => -10,
+                            "code"    => -10,
                             "message" => "Authorization illegality",
                         ]
                     )
@@ -119,10 +130,15 @@ class ApiGuard implements Guard
             $token = json_decode($token);
 
             if ($token->nbf > time()) {
+                if (!$this->checkMiddleware()) {
+                    $this->user = $user;
+                    return;
+                }
+
                 throw new AuthenticationException(
                     json_encode(
                         [
-                            "code" => -12,
+                            "code"    => -12,
                             "message" => "Authorization inactive",
                         ]
                     )
@@ -130,10 +146,15 @@ class ApiGuard implements Guard
             }
 
             if ($token->exp < time()) {
+                if (!$this->checkMiddleware()) {
+                    $this->user = $user;
+                    return;
+                }
+
                 throw new AuthenticationException(
                     json_encode(
                         [
-                            "code" => -11,
+                            "code"    => -11,
                             "message" => "Authorization expired",
                         ]
                     )
@@ -247,5 +268,10 @@ class ApiGuard implements Guard
     protected function hasValidCredentials($user, $credentials)
     {
         return !is_null($user) && $this->provider->validateCredentials($user, $credentials);
+    }
+
+    protected function checkMiddleware()
+    {
+        return in_array("api:chestnut", $this->request->route()->middleware());
     }
 }

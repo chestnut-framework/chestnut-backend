@@ -1,12 +1,12 @@
 <?php
 namespace Chestnut\Dashboard\Fields;
 
-class Password extends Field
+class Password extends Text
 {
-    public function __construct($prop, $label)
+    public function __construct($prop)
     {
-        parent::__construct($prop, $label, "el-input");
+        parent::__construct($prop, "input");
 
-        $this->setAttribute('show-password', true);
+        $this->setAttribute('type', 'password');
     }
 }

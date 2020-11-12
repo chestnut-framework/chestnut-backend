@@ -10,6 +10,8 @@ class Permission extends Nut
     //
     protected $namespace = 'Chestnut\Auth\Models';
 
+    protected $icon = "view-grid-add";
+
     public function fields(): array
     {
         return [
@@ -20,6 +22,6 @@ class Permission extends Nut
 
     public function group()
     {
-        return __("chestnut::chestnut.permission.manager");
+        return "permissions@user-group";
     }
 }

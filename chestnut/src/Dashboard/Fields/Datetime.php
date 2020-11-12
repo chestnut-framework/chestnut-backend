@@ -5,7 +5,7 @@ class Datetime extends Field
 {
     public function __construct($prop, $label)
     {
-        parent::__construct($prop, $label, "el-date-picker");
+        parent::__construct($prop, $label, "DatePicker");
 
         $this->setAttribute('type', 'datetime');
     }

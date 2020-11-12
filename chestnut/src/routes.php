@@ -1,6 +1,6 @@
 <?php
 
-Route::prefix('api')
+Route::prefix('api/auth')
     ->middleware('api')
     ->namespace('Chestnut\Auth')
     ->group(function () {
@@ -16,6 +16,21 @@ Route::get(env("CHESTNUT_PATH_PREFIX", "admin") . "{any}", function () {
     return view('chestnut::dashboard');
 })->where('any', '(?!api).*');
 
-Route::prefix('api')->middleware('api', 'auth:api')->get('/options', function () {
+Route::prefix('api')->middleware('api', 'auth:chestnut')->get('/options', function () {
     return ['code' => 200, 'message' => 'request success', 'data' => app('shell')];
+});
+
+Route::prefix('api')->middleware('api')->get('/settings', function () {
+    $data = [];
+    if (!empty(Auth::guard("chestnut")->user())) {
+        $data = app("shell")->jsonSerialize();
+    }
+
+    $data = array_merge($data, [
+        "appName"     => env("APP_NAME", "CHESTNUT"),
+        "description" => env("DESCRIPTION", "Chestnut Resource Manage System"),
+        "routePrefix" => env("CHESTNUT_ROUTE_PREFIX", ""),
+    ]);
+
+    return ['code' => 200, 'message' => 'request success', 'data' => $data];
 });

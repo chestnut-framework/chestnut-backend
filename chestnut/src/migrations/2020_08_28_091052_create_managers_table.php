@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddUserColumns extends Migration
+class CreateManagersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,15 +13,19 @@ class AddUserColumns extends Migration
      */
     public function up()
     {
-        //
-        Schema::table("users", function (Blueprint $table) {
-            $table->string('phone', 11)->unique()->nullable()->after("email");
-            $table->string('openid')->unique()->nullable()->after("phone");
+        Schema::create('managers', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
             $table->string('avatar')->nullable();
+            $table->string('email')->unique()->nullable();
+            $table->string('phone', 11)->unique()->nullable();
+            $table->string('openid')->unique()->nullable();
             $table->string('api_token', 64)->nullable();
             $table->string("session_key", 100)->nullable();
-            $table->string('refresh_token', 64)->nullable();
+            $table->string('password')->nullable();
+            $table->rememberToken();
             $table->softDeletes();
+            $table->timestamps();
         });
     }
 
@@ -32,10 +36,6 @@ class AddUserColumns extends Migration
      */
     public function down()
     {
-        //
-        Schema::table("users", function (Blueprint $table) {
-            $table->dropColumn(['phone', 'openid', 'api_token', 'session_key', 'refresh_token']);
-            $table->dropSoftDeletes();
-        });
+        Schema::dropIfExists('managers');
     }
 }

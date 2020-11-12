@@ -5,6 +5,6 @@ class Text extends Field
 {
     public function __construct($prop, $label)
     {
-        parent::__construct($prop, $label, "el-input");
+        parent::__construct($prop, $label, "input");
     }
 }

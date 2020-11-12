@@ -5,7 +5,7 @@ class Checkbox extends Field
 {
     public function __construct($prop, $label)
     {
-        parent::__construct($prop, $label, "c-checkbox");
+        parent::__construct($prop, $label, "Checkbox");
     }
 
     public function options($options)

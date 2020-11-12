@@ -47,6 +47,13 @@ class Nut extends Controller
     public $statistic = [];
 
     /**
+     * Nut's icon
+     *
+     * @var string
+     */
+    protected $icon;
+
+    /**
      * Resource Register
      *
      * @param Illuminate\Foundation\Application $app Laravel Application
@@ -56,7 +63,7 @@ class Nut extends Controller
     public function register(Application $app)
     {
         $app->router->prefix('api/' . $this->getName())
-            ->middleware('api', 'auth:api')
+            ->middleware('api', 'auth:chestnut')
             ->group(
                 function ($router) {
                     $this->registerDefaultRoutes($router);
@@ -116,13 +123,14 @@ class Nut extends Controller
     {
         $name = $this->getName();
 
-        $this->registerComponent("Table", [
+        $this->registerComponent("Contents", [
             'name'       => $name,
+            'icon'       => $this->icon,
             'group'      => $this->group(),
             'showInMenu' => $this->showInMenu,
         ]);
 
-        $this->registerComponent("Editor", [
+        $this->registerComponent("Content", [
             ["path" => $name . "/create", "name" => $name . ".create"],
             ["path" => $name . "/:id/edit", "name" => $name . ".edit"],
         ]);

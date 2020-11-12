@@ -9,7 +9,7 @@ class Select extends Field
 
     public function __construct($prop, $label)
     {
-        parent::__construct($prop, $label, "c-select");
+        parent::__construct($prop, $label, "Select");
     }
 
     public function options($options, $label_prop = "name", $value_prop = "id")
